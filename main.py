@@ -81,12 +81,10 @@ async def main():
                 backup = r.json()
                 logging.info('created backup: %s', backup)
                 if backup['status'] != 'acknowledged':
-                    logging.error('backup failed')
-                    return
+                    raise Exception('backup failed')
 
                 if not await wait_status(client, 'create'):
-                    logging.error('failed waiting for status for create')
-                    return
+                    raise Exception('failed waiting for status for create')
                 
                 name = backup['backup_name']
 
@@ -104,11 +102,10 @@ async def main():
                     break
 
                 if not success:
-                    logging.error('upload failed')
+                    raise Exception('upload failed')
                 else:
                     if not await wait_status(client, f'upload {name}'):
-                        logging.error('failed waiting for status for upload')
-                        return
+                        raise Exception('failed waiting for status for upload')
         except Exception as e:
             logging.exception(e)
             METRICS_BACKUP_ERROR.inc()
