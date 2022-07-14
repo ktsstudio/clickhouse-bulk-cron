@@ -58,7 +58,7 @@ async def main():
                 for _ in range(5):
                     r = await client.post(CLICKHOUSE_BACKUP_ADDR + f'/backup/upload/{name}')
                     upload = r.json()
-                    if r['status'] == 'error':
+                    if upload['status'] == 'error':
                         logging.warning('received error on upload: %s', upload)
                         await asyncio.sleep(random.random() * 5)
                         continue
