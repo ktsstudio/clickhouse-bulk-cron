@@ -106,7 +106,7 @@ async def main():
                 if not success:
                     logging.error('upload failed')
                 else:
-                    if not await wait_status(client, 'upload'):
+                    if not await wait_status(client, f'upload {name}'):
                         logging.error('failed waiting for status for upload')
                         return
         except Exception as e:
