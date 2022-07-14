@@ -1,4 +1,5 @@
 import asyncio
+from random import random
 import aiocron
 import os
 import logging
@@ -59,7 +60,7 @@ async def main():
                     upload = r.json()
                     if r['status'] == 'error':
                         logging.warning('received error on upload: %s', upload)
-                        await asyncio.sleep(5)
+                        await asyncio.sleep(random.random() * 5)
                         continue
 
                     success = True
