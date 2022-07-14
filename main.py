@@ -66,6 +66,7 @@ async def main():
 
                     success = True
                     logging.info('uploaded backup: %s', upload)
+                    break
 
                 if not success:
                     logging.error('upload failed')
