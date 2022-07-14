@@ -111,6 +111,7 @@ async def main():
             METRICS_BACKUP_ERROR.inc()
         else:
             METRICS_BACKUP_SUCCESS.inc()
+            logging.info('backup finished successfully')
 
     try:
         while True:
