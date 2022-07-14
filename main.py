@@ -53,9 +53,20 @@ async def main():
                 
                 name = backup['backup_name']
 
-                r = await client.post(CLICKHOUSE_BACKUP_ADDR + f'/backup/upload/{name}')
-                upload = r.json()
-                logging.info('uploaded backup: %s', upload)
+                success = False
+                for _ in range(5):
+                    r = await client.post(CLICKHOUSE_BACKUP_ADDR + f'/backup/upload/{name}')
+                    upload = r.json()
+                    if r['status'] == 'error':
+                        logging.warning('received error on upload: %s', upload)
+                        await asyncio.sleep(5)
+                        continue
+
+                    success = True
+                    logging.info('uploaded backup: %s', upload)
+
+                if not success:
+                    logging.error('upload failed')
         except Exception as e:
             logging.exception(e)
             METRICS_BACKUP_ERROR.inc()
