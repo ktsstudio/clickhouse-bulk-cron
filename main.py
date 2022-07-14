@@ -38,6 +38,7 @@ logging.info('starting cron at schedule: %s', BACKUP_SCHEDULE)
 
 async def get_status(client: httpx.AsyncClient, command: str) -> bool:
     r = await client.get(CLICKHOUSE_BACKUP_ADDR + '/backup/status')
+    logging.info('received status: %s', r.text)
     docs = []
     for line in r.text.splitlines():
         doc = json.loads(line)
