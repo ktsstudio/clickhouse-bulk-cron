@@ -6,7 +6,7 @@ on:
       - 'main'
 
 env:
-  TAG: 0.0.4
+  TAG: 0.0.5
 
 jobs:
   docker:

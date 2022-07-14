@@ -1,5 +1,5 @@
 import asyncio
-from random import random
+import random
 import aiocron
 import os
 import logging
@@ -50,6 +50,7 @@ async def main():
                 backup = r.json()
                 logging.info('created backup: %s', backup)
                 if backup['status'] != 'acknowledged':
+                    logging.error('backup failed')
                     return
                 
                 name = backup['backup_name']
