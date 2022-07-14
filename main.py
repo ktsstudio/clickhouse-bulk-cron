@@ -1,5 +1,7 @@
 import asyncio
+import json
 import random
+import time
 import aiocron
 import os
 import logging
@@ -34,6 +36,34 @@ app.add_routes([
 
 logging.info('starting cron at schedule: %s', BACKUP_SCHEDULE)
 
+async def get_status(client: httpx.AsyncClient, command: str) -> bool:
+    r = await client.get(CLICKHOUSE_BACKUP_ADDR + '/backup/status')
+    docs = []
+    for line in r.text.splitlines():
+        doc = json.loads(line)
+        docs.append(doc)
+
+    assert len(docs) == 1
+    doc = docs[0]
+    if doc['command'] != command:
+        return False
+
+    return doc['status'] == 'success'
+
+async def wait_status(client: httpx.AsyncClient, command: str, timeout: float = 30) -> bool:
+    started_at = time.time()
+    elapsed = 0
+    while True:
+        status = await get_status(client, command)
+        if status:
+            return True
+        await asyncio.sleep(2.0)
+        elapsed = time.time() - started_at
+        if elapsed >= timeout:
+            return False
+    return False
+        
+
 async def main():
     runner = web.AppRunner(app, handle_signals=True)
     await runner.setup()
@@ -51,6 +81,10 @@ async def main():
                 logging.info('created backup: %s', backup)
                 if backup['status'] != 'acknowledged':
                     logging.error('backup failed')
+                    return
+
+                if not await wait_status(client, 'create'):
+                    logging.error('failed waiting for status for create')
                     return
                 
                 name = backup['backup_name']
@@ -70,6 +104,10 @@ async def main():
 
                 if not success:
                     logging.error('upload failed')
+                else:
+                    if not await wait_status(client, 'upload'):
+                        logging.error('failed waiting for status for upload')
+                        return
         except Exception as e:
             logging.exception(e)
             METRICS_BACKUP_ERROR.inc()
