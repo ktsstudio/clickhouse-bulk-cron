@@ -22,7 +22,7 @@ logging.basicConfig(
 
 CLICKHOUSE_BACKUP_ADDR = os.getenv('CLICKHOUSE_BACKUP_ADDR', 'http://127.0.0.1:7171')
 BACKUP_SCHEDULE = os.getenv('BACKUP_SCHEDULE', '* * */24 * *')
-BACKUP_WAIT_TIME = os.getenv('BACKUP_WAIT_TIME', '90')
+BACKUP_WAIT_TIME = float(os.getenv('BACKUP_WAIT_TIME', '90'))
 
 async def metrics(request):
     latest = prometheus_client.generate_latest()
@@ -52,7 +52,7 @@ async def get_status(client: httpx.AsyncClient, command: str) -> bool:
 
     return doc['status'] == 'success'
 
-async def wait_status(client: httpx.AsyncClient, command: str, timeout: float = BACKUP_WAIT_TIME) -> bool:
+async def wait_status(client: httpx.AsyncClient, command: str, timeout: float = 30) -> bool:
     started_at = time.time()
     elapsed = 0
     while True:
@@ -84,7 +84,7 @@ async def main():
                 if backup['status'] != 'acknowledged':
                     raise Exception('backup failed')
 
-                if not await wait_status(client, 'create'):
+                if not await wait_status(client, 'create', BACKUP_WAIT_TIME):
                     raise Exception('failed waiting for status for create')
                 
                 name = backup['backup_name']
@@ -105,7 +105,7 @@ async def main():
                 if not success:
                     raise Exception('upload failed')
                 else:
-                    if not await wait_status(client, f'upload {name}'):
+                    if not await wait_status(client, f'upload {name}', BACKUP_WAIT_TIME):
                         raise Exception('failed waiting for status for upload')
         except Exception as e:
             logging.exception(e)
