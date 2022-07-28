@@ -22,7 +22,7 @@ logging.basicConfig(
 
 CLICKHOUSE_BACKUP_ADDR = os.getenv('CLICKHOUSE_BACKUP_ADDR', 'http://127.0.0.1:7171')
 BACKUP_SCHEDULE = os.getenv('BACKUP_SCHEDULE', '* * */24 * *')
-BACKUP_WAIT_TIME = float(os.getenv('BACKUP_WAIT_TIME', '90'))
+BACKUP_WAIT_TIME = float(os.getenv('BACKUP_WAIT_TIME', '30'))
 
 async def metrics(request):
     latest = prometheus_client.generate_latest()
