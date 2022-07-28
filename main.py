@@ -22,6 +22,7 @@ logging.basicConfig(
 
 CLICKHOUSE_BACKUP_ADDR = os.getenv('CLICKHOUSE_BACKUP_ADDR', 'http://127.0.0.1:7171')
 BACKUP_SCHEDULE = os.getenv('BACKUP_SCHEDULE', '* * */24 * *')
+BACKUP_WAIT_TIME = float(os.getenv('BACKUP_WAIT_TIME', '30'))
 
 async def metrics(request):
     latest = prometheus_client.generate_latest()
@@ -83,7 +84,7 @@ async def main():
                 if backup['status'] != 'acknowledged':
                     raise Exception('backup failed')
 
-                if not await wait_status(client, 'create'):
+                if not await wait_status(client, 'create', BACKUP_WAIT_TIME):
                     raise Exception('failed waiting for status for create')
                 
                 name = backup['backup_name']
@@ -104,7 +105,7 @@ async def main():
                 if not success:
                     raise Exception('upload failed')
                 else:
-                    if not await wait_status(client, f'upload {name}'):
+                    if not await wait_status(client, f'upload {name}', BACKUP_WAIT_TIME):
                         raise Exception('failed waiting for status for upload')
         except Exception as e:
             logging.exception(e)
