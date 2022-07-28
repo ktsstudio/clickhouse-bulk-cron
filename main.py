@@ -22,6 +22,7 @@ logging.basicConfig(
 
 CLICKHOUSE_BACKUP_ADDR = os.getenv('CLICKHOUSE_BACKUP_ADDR', 'http://127.0.0.1:7171')
 BACKUP_SCHEDULE = os.getenv('BACKUP_SCHEDULE', '* * */24 * *')
+BACKUP_WAIT_TIME = os.getenv('BACKUP_WAIT_TIME', '90')
 
 async def metrics(request):
     latest = prometheus_client.generate_latest()
@@ -51,7 +52,7 @@ async def get_status(client: httpx.AsyncClient, command: str) -> bool:
 
     return doc['status'] == 'success'
 
-async def wait_status(client: httpx.AsyncClient, command: str, timeout: float = 30) -> bool:
+async def wait_status(client: httpx.AsyncClient, command: str, timeout: float = BACKUP_WAIT_TIME) -> bool:
     started_at = time.time()
     elapsed = 0
     while True:
